@@ -1,0 +1,54 @@
+
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { useResume } from "@/context/ResumeContext";
+import { FileText, Save, Download, Plus } from "lucide-react";
+
+const Header: React.FC = () => {
+  const { saveResume, downloadResume, createNewResume, resume } = useResume();
+
+  return (
+    <header className="bg-resume-primary text-white shadow-md">
+      <div className="container mx-auto py-4 px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-2">
+          <FileText className="h-6 w-6" />
+          <h1 className="text-xl font-bold">Smart Resume Hub</h1>
+        </div>
+        
+        <div className="flex flex-wrap gap-2 justify-center">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-white border-white hover:bg-white/20"
+            onClick={createNewResume}
+          >
+            <Plus className="mr-1 h-4 w-4" />
+            New
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-white border-white hover:bg-white/20"
+            onClick={saveResume}
+          >
+            <Save className="mr-1 h-4 w-4" />
+            Save
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-white border-white hover:bg-white/20"
+            onClick={downloadResume}
+          >
+            <Download className="mr-1 h-4 w-4" />
+            Download PDF
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
