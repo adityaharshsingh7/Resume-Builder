@@ -5,25 +5,25 @@ export const resumeTemplates: ResumeTemplate[] = [
   {
     id: "simple",
     name: "Simple",
-    thumbnail: "/placeholder.svg",
+    thumbnail: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80",
     component: "SimpleTemplate"
   },
   {
     id: "professional",
     name: "Professional",
-    thumbnail: "/placeholder.svg",
+    thumbnail: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80",
     component: "ProfessionalTemplate"
   },
   {
     id: "modern",
     name: "Modern",
-    thumbnail: "/placeholder.svg",
+    thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
     component: "ModernTemplate"
   },
   {
     id: "creative",
     name: "Creative",
-    thumbnail: "/placeholder.svg",
+    thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80",
     component: "CreativeTemplate"
   }
 ];

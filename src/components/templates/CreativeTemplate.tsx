@@ -10,7 +10,7 @@ const CreativeTemplate: React.FC = () => {
     <div className="resume-page font-sans">
       {/* Header */}
       <div className="bg-resume-accent p-8 relative">
-        <div className="absolute top-0 left-0 w-full h-full bg-resume-accent opacity-60 clip-path-diagonal"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-resume-accent opacity-60 clipPathDiagonal"></div>
         <div className="relative z-10">
           <h1 className="text-4xl font-bold text-white mb-1">
             {personalInfo.firstName} <span className="text-resume-light">{personalInfo.lastName}</span>
@@ -151,11 +151,14 @@ const CreativeTemplate: React.FC = () => {
         </div>
       </div>
 
-      <style jsx global>{`
-        .clip-path-diagonal {
-          clip-path: polygon(0 0, 100% 0, 100% 70%, 0% 100%);
-        }
-      `}</style>
+      {/* Using regular CSS for the diagonal clip path */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .clipPathDiagonal {
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 0% 100%);
+          }
+        `
+      }} />
     </div>
   );
 };

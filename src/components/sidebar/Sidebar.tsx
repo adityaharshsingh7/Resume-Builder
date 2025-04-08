@@ -29,10 +29,10 @@ const Sidebar: React.FC = () => {
             <Button
               key={item.id}
               variant={activeSection === item.id ? "default" : "ghost"}
-              className={`w-full justify-start ${
+              className={`w-full justify-start transition-all duration-200 ${
                 activeSection === item.id 
                   ? "bg-resume-primary text-white" 
-                  : "hover:bg-muted"
+                  : "hover:bg-muted hover:translate-x-1"
               }`}
               onClick={() => setActiveSection(item.id as any)}
             >
