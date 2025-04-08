@@ -19,30 +19,30 @@ const Header: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-white border-white"
+            className="text-white border-white hover:bg-resume-primary/20"
             onClick={createNewResume}
           >
-            <Plus className="mr-1 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             New
           </Button>
           
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-white border-white"
+            className="text-white border-white hover:bg-resume-primary/20"
             onClick={saveResume}
           >
-            <Save className="mr-1 h-4 w-4" />
+            <Save className="h-4 w-4" />
             Save
           </Button>
           
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-white border-white"
+            className="text-white border-white hover:bg-resume-primary/20"
             onClick={downloadResume}
           >
-            <Download className="mr-1 h-4 w-4" />
+            <Download className="h-4 w-4" />
             Download PDF
           </Button>
         </div>
