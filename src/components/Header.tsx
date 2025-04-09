@@ -19,31 +19,31 @@ const Header: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-white border-white hover:bg-resume-primary/20"
+            className="text-white border-white hover:bg-resume-primary/20 flex items-center gap-2"
             onClick={createNewResume}
           >
             <Plus className="h-4 w-4" />
-            New
+            <span>New</span>
           </Button>
           
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-white border-white hover:bg-resume-primary/20"
+            className="text-white border-white hover:bg-resume-primary/20 flex items-center gap-2"
             onClick={saveResume}
           >
             <Save className="h-4 w-4" />
-            Save
+            <span>Save</span>
           </Button>
           
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-white border-white hover:bg-resume-primary/20"
+            className="text-white border-white hover:bg-resume-primary/20 flex items-center gap-2"
             onClick={downloadResume}
           >
             <Download className="h-4 w-4" />
-            Download PDF
+            <span>Download PDF</span>
           </Button>
         </div>
       </div>

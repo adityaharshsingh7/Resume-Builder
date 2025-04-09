@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Resume, ResumeSection } from "../types/resume";
 import { defaultResume } from "../data/resumeTemplates";
 import { useToast } from "@/components/ui/use-toast";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface ResumeContextType {
   resume: Resume;
@@ -12,6 +14,7 @@ interface ResumeContextType {
   savedResumes: Resume[];
   saveResume: () => void;
   loadResume: (id: string) => void;
+  deleteResume: (id: string) => void;
   createNewResume: () => void;
   downloadResume: () => void;
 }
@@ -82,6 +85,17 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const deleteResume = (id: string) => {
+    const newSavedResumes = savedResumes.filter((r) => r.id !== id);
+    setSavedResumes(newSavedResumes);
+    localStorage.setItem("savedResumes", JSON.stringify(newSavedResumes));
+    
+    toast({
+      title: "Resume deleted",
+      description: "Your resume has been deleted successfully.",
+    });
+  };
+
   const createNewResume = () => {
     setResume({ ...defaultResume, id: crypto.randomUUID() });
     setActiveSection("template");
@@ -92,14 +106,49 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   };
 
-  const downloadResume = () => {
-    // Handle print to PDF functionality
-    window.print();
-    
-    toast({
-      title: "Downloading resume",
-      description: "Your resume is being prepared for download.",
-    });
+  const downloadResume = async () => {
+    try {
+      toast({
+        title: "Processing",
+        description: "Preparing your resume for download...",
+      });
+      
+      const resumeElement = document.querySelector('.resume-page');
+      if (!resumeElement) {
+        throw new Error("Resume element not found");
+      }
+      
+      const canvas = await html2canvas(resumeElement as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`${resume.title || 'resume'}.pdf`);
+      
+      toast({
+        title: "Success",
+        description: "Your resume has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem downloading your resume. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const value = {
@@ -110,6 +159,7 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     savedResumes,
     saveResume,
     loadResume,
+    deleteResume,
     createNewResume,
     downloadResume,
   };

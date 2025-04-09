@@ -4,10 +4,10 @@ import { useResume } from "@/context/ResumeContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { FileText } from "lucide-react";
+import { FileText, Trash } from "lucide-react";
 
 const SavedResumes: React.FC = () => {
-  const { savedResumes, loadResume } = useResume();
+  const { savedResumes, loadResume, deleteResume } = useResume();
 
   if (savedResumes.length === 0) {
     return (
@@ -34,14 +34,24 @@ const SavedResumes: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 px-2 text-xs"
-                  onClick={() => loadResume(savedResume.id)}
-                >
-                  Open
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2 text-xs"
+                    onClick={() => loadResume(savedResume.id)}
+                  >
+                    Open
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => deleteResume(savedResume.id)}
+                  >
+                    <Trash className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
