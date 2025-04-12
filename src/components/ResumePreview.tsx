@@ -27,7 +27,7 @@ const ResumePreview: React.FC = () => {
 
   return (
     <div className="h-full overflow-auto bg-gray-100 p-6 flex justify-center">
-      <div className="transform scale-[0.7] origin-top">
+      <div className="transform scale-[0.7] origin-top print:scale-100">
         {renderTemplate()}
       </div>
     </div>
