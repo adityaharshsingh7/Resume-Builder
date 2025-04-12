@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -84,6 +85,13 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   position: relative;
   overflow: hidden;
+  font-size: 11pt; /* Base font size for resumes */
+  line-height: 1.4;
+}
+
+/* Fix alignment issues in ModernTemplate */
+.resume-page .ml-1\/3 {
+  margin-left: 33.333%;
 }
 
 @media print {
@@ -93,6 +101,7 @@
   
   .resume-page, .resume-page * {
     visibility: visible;
+    overflow: visible;
   }
   
   .resume-page {
@@ -104,7 +113,41 @@
     margin: 0;
     padding: 0;
     box-shadow: none;
-    overflow: hidden;
+    overflow: visible;
     transform: scale(1) !important;
+    page-break-after: always;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Ensure content doesn't overlap in the Modern template */
+  .resume-page .ml-1\/3 {
+    margin-left: 33.333%;
+  }
+
+  /* Ensure proper spacing and no overlapping */
+  .resume-page p, 
+  .resume-page div, 
+  .resume-page h1, 
+  .resume-page h2, 
+  .resume-page h3 {
+    overflow: visible;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+/* Additional print-specific fixes for each template */
+@media print {
+  /* For Modern template */
+  .resume-page [class*="absolute"] {
+    position: absolute !important;
+    overflow: visible !important;
+  }
+  
+  /* For all templates - prevent text overflow */
+  .resume-page .whitespace-pre-line {
+    white-space: pre-line !important;
+    word-wrap: break-word !important;
   }
 }
