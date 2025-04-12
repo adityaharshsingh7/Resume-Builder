@@ -2,8 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useResume } from "@/context/ResumeContext";
-import { FileText, Save, Download, Plus, List } from "lucide-react";
-import { Link } from "react-router-dom";
+import { FileText, Save, Download, Plus } from "lucide-react";
 
 const Header: React.FC = () => {
   const { saveResume, downloadResume, createNewResume, resume } = useResume();
@@ -17,17 +16,6 @@ const Header: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          <Link to="/grocery-list">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-white border-white hover:bg-resume-primary/20 flex items-center gap-2"
-            >
-              <List className="h-4 w-4" />
-              <span>Grocery List</span>
-            </Button>
-          </Link>
-          
           <div className="flex flex-wrap gap-2 justify-center">
             <Button 
               variant="outline" 
