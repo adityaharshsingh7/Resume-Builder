@@ -18,9 +18,9 @@ const Header: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="flex flex-wrap gap-2 justify-center">
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="sm" 
-              className="text-white border-white flex items-center gap-2"
+              className="bg-white text-resume-primary font-medium flex items-center gap-2"
               onClick={createNewResume}
             >
               <Plus className="h-4 w-4" />
@@ -28,9 +28,9 @@ const Header: React.FC = () => {
             </Button>
             
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="sm" 
-              className="text-white border-white flex items-center gap-2"
+              className="bg-white text-resume-primary font-medium flex items-center gap-2"
               onClick={saveResume}
             >
               <Save className="h-4 w-4" />
@@ -38,9 +38,9 @@ const Header: React.FC = () => {
             </Button>
             
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="sm" 
-              className="text-white border-white flex items-center gap-2"
+              className="bg-white text-resume-primary font-medium flex items-center gap-2"
               onClick={downloadResume}
             >
               <Download className="h-4 w-4" />
