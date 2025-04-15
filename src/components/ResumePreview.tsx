@@ -32,8 +32,9 @@ const ResumePreview: React.FC = () => {
         ref={resumeRef}
         className="transform scale-[0.75] origin-top print:scale-100 transition-transform duration-200"
         style={{ 
-          marginBottom: "40px", // Add margin to see the bottom of the resume
-          transformOrigin: "top center" // Better centering
+          width: "8.5in",
+          marginBottom: "40px",
+          transformOrigin: "top center"
         }}
       >
         {renderTemplate()}

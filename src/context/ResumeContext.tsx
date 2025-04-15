@@ -91,117 +91,86 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw new Error("Resume element not found");
       }
       
-      // Add a temporary class for PDF generation
       document.body.classList.add('generating-pdf');
       
-      // Improved canvas rendering options
-      const canvas = await html2canvas(resumeElement as HTMLElement, {
-        scale: 3, // Higher scale for better quality
+      const clone = resumeElement.cloneNode(true) as HTMLElement;
+      clone.classList.add('pdf-export');
+      clone.style.width = '8.5in';
+      clone.style.height = 'auto';
+      clone.style.minHeight = '11in';
+      clone.style.transform = 'scale(1)';
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      document.body.appendChild(clone);
+      
+      const textElements = clone.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, div');
+      textElements.forEach(el => {
+        const element = el as HTMLElement;
+        element.style.overflow = 'visible';
+        element.style.whiteSpace = 'normal';
+        element.style.wordBreak = 'break-word';
+        element.style.lineHeight = '1.5';
+        element.style.maxWidth = '100%';
+      });
+      
+      if (resume.templateId === 'modern') {
+        const sidebar = clone.querySelector('.w-1\\/3.absolute') as HTMLElement;
+        const mainContent = clone.querySelector('.ml-1\\/3.w-2\\/3') as HTMLElement;
+        
+        if (sidebar) {
+          sidebar.style.position = 'absolute';
+          sidebar.style.width = '33.333%';
+          sidebar.style.height = '100%';
+          sidebar.style.top = '0';
+          sidebar.style.left = '0';
+          sidebar.style.overflow = 'visible';
+        }
+        
+        if (mainContent) {
+          mainContent.style.position = 'absolute';
+          mainContent.style.width = '66.666%';
+          mainContent.style.top = '0';
+          mainContent.style.right = '0';
+          mainContent.style.marginLeft = '33.333%';
+          mainContent.style.overflow = 'visible';
+        }
+      }
+      
+      const canvas = await html2canvas(clone, {
+        scale: 3,
         useCORS: true,
         logging: false,
         allowTaint: true,
-        onclone: (clonedDoc) => {
-          // Fix the layout in the cloned document
-          const clonedResume = clonedDoc.querySelector('.resume-page');
-          if (clonedResume) {
-            clonedResume.classList.add('pdf-export');
-            
-            // Ensure proper styling for print
-            const style = clonedDoc.createElement('style');
-            style.innerHTML = `
-              .resume-page.pdf-export {
-                transform: scale(1) !important;
-                position: relative !important;
-                overflow: visible !important;
-                width: 8.5in !important;
-                min-height: 11in !important;
-                page-break-after: always !important;
-              }
-              
-              .resume-page.pdf-export * {
-                font-family: Arial, Helvetica, sans-serif !important;
-                letter-spacing: normal !important;
-                word-spacing: normal !important;
-                line-height: 1.3 !important;
-                text-rendering: geometricPrecision !important;
-              }
-              
-              .resume-page.pdf-export [class*="absolute"] {
-                position: absolute !important;
-              }
-              
-              .resume-page.pdf-export .ml-1\\/3 {
-                margin-left: 33.333% !important;
-              }
-              
-              .resume-page.pdf-export p, 
-              .resume-page.pdf-export div,
-              .resume-page.pdf-export span,
-              .resume-page.pdf-export h1,
-              .resume-page.pdf-export h2,
-              .resume-page.pdf-export h3 {
-                overflow: visible !important;
-                word-wrap: break-word !important;
-                max-width: 100% !important;
-                white-space: normal !important;
-              }
-              
-              .resume-page.pdf-export .flex {
-                display: flex !important;
-              }
-              
-              .resume-page.pdf-export .justify-between {
-                justify-content: space-between !important;
-              }
-              
-              .resume-page.pdf-export .grid {
-                display: grid !important;
-              }
-              
-              .resume-page.pdf-export .grid-cols-12 {
-                grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-              }
-              
-              .resume-page.pdf-export .col-span-4 {
-                grid-column: span 4 / span 4 !important;
-              }
-              
-              .resume-page.pdf-export .col-span-8 {
-                grid-column: span 8 / span 8 !important;
-              }
-              
-              .resume-page.pdf-export .w-1\\/3 {
-                width: 33.333% !important;
-              }
-              
-              .resume-page.pdf-export .w-2\\/3 {
-                width: 66.666% !important;
-              }
-              
-              .resume-page.pdf-export .space-y-3 > * + *,
-              .resume-page.pdf-export .space-y-4 > * + * {
-                margin-top: 0.75rem !important;
-              }
-            `;
-            clonedDoc.head.appendChild(style);
-          }
-        }
+        backgroundColor: '#ffffff',
+        imageTimeout: 15000,
+        windowWidth: 8.5 * 96,
+        windowHeight: 11 * 96,
       });
       
-      // Remove temporary class
+      document.body.removeChild(clone);
       document.body.classList.remove('generating-pdf');
       
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgWidth = 8.5 * 72;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // Create PDF with proper dimensions
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'pt',
-        format: [canvas.width, canvas.height]
+        format: [imgWidth, imgHeight]
       });
       
-      // Add image at exact size to ensure proper rendering
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height, '', 'FAST');
+      pdf.addImage(
+        canvas.toDataURL('image/jpeg', 1.0), 
+        'JPEG', 
+        0, 
+        0, 
+        imgWidth, 
+        imgHeight, 
+        undefined, 
+        'FAST'
+      );
+      
       pdf.save(`${resume.title || 'resume'}.pdf`);
       
       toast({

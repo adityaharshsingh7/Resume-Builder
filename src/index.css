@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,6 +51,7 @@
   }
 }
 
+/* Main resume styling - visible in browser */
 .resume-page {
   width: 8.5in;
   min-height: 11in;
@@ -58,59 +60,135 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   position: relative;
   overflow: hidden;
-  font-size: 11pt; /* Base font size for resumes */
+  font-size: 11pt;
   line-height: 1.5;
   page-break-after: always;
   letter-spacing: normal;
 }
 
-/* Fix alignment issues in ModernTemplate */
-.resume-page .ml-1\/3 {
-  margin-left: 33.333%;
-}
-
-/* Ensure content spacing */
+/* Core resume styles */
 .resume-page p {
   margin-bottom: 0.25rem;
 }
 
-/* Ensure headers have proper spacing */
-.resume-page h1, .resume-page h2, .resume-page h3 {
+.resume-page h1, 
+.resume-page h2, 
+.resume-page h3 {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
-/* Ensure skill bars display properly */
-.resume-page .bg-gray-200,
-.resume-page .bg-white\/20 {
-  position: relative;
-  overflow: visible;
+/* Template-specific styles */
+.resume-page .ml-1\/3 {
+  margin-left: 33.333%;
 }
 
-/* Fix for creative template */
 .resume-page .grid.grid-cols-12 {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
-/* Fix for modern template sidebar */
 .resume-page .w-1\/3.absolute {
   width: 33.333%;
   height: 100%;
   overflow: visible;
 }
 
-/* Ensure spacing between sections */
-.resume-page .mb-6 {
-  margin-bottom: 1.5rem;
-}
-
-/* Ensure space between items */
 .resume-page .space-y-4 > * + *,
 .resume-page .space-y-3 > * + * {
   margin-top: 1rem !important;
 }
 
+/* PDF Export specific styles */
+.pdf-export {
+  transform: scale(1) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  width: 8.5in !important;
+  min-height: 11in !important;
+  max-width: 8.5in !important;
+  overflow: hidden !important;
+  page-break-after: always !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.pdf-export * {
+  font-family: Arial, Helvetica, sans-serif !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  white-space: normal !important;
+  box-sizing: border-box !important;
+}
+
+/* Fix Modern template for PDF specifically */
+.pdf-export.resume-page .w-1\/3.absolute {
+  position: absolute !important;
+  width: 33.333% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+  overflow: visible !important;
+}
+
+.pdf-export.resume-page .ml-1\/3 {
+  margin-left: 33.333% !important;
+}
+
+.pdf-export.resume-page .ml-1\/3.w-2\/3.absolute {
+  position: absolute !important;
+  width: 66.666% !important;
+  right: 0 !important;
+  top: 0 !important;
+  overflow: visible !important;
+}
+
+/* Fix specific layout issues */
+.pdf-export.resume-page .flex {
+  display: flex !important;
+}
+
+.pdf-export.resume-page .justify-between {
+  justify-content: space-between !important;
+}
+
+.pdf-export.resume-page .grid {
+  display: grid !important;
+}
+
+.pdf-export.resume-page .grid-cols-12 {
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+}
+
+.pdf-export.resume-page .col-span-4 {
+  grid-column: span 4 / span 4 !important;
+}
+
+.pdf-export.resume-page .col-span-8 {
+  grid-column: span 8 / span 8 !important;
+}
+
+/* Fix spacing */
+.pdf-export.resume-page h1,
+.pdf-export.resume-page h2,
+.pdf-export.resume-page h3 {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.3 !important;
+}
+
+.pdf-export.resume-page p {
+  margin-bottom: 0.25rem !important;
+  line-height: 1.5 !important;
+}
+
+.pdf-export.resume-page .space-y-3 > * + *,
+.pdf-export.resume-page .space-y-4 > * + * {
+  margin-top: 0.75rem !important;
+}
+
+/* Print-specific styles (for actual browser printing) */
 @media print {
   body * {
     visibility: hidden;
@@ -122,44 +200,25 @@
   }
   
   .resume-page {
-    width: 8.5in;
-    height: 11in;
     position: absolute;
     left: 0;
     top: 0;
     margin: 0;
     padding: 0;
     box-shadow: none;
-    overflow: visible;
     transform: scale(1) !important;
+    width: 8.5in !important;
+    height: 11in !important;
     page-break-after: always;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
 
-  /* Ensure content doesn't overlap in the Modern template */
+  /* Template-specific print fixes */
   .resume-page .ml-1\/3 {
     margin-left: 33.333% !important;
   }
-
-  /* Ensure proper spacing and no overlapping */
-  .resume-page p, 
-  .resume-page div, 
-  .resume-page h1, 
-  .resume-page h2, 
-  .resume-page h3,
-  .resume-page span {
-    overflow: visible !important;
-    max-width: 100% !important;
-    white-space: normal !important;
-    letter-spacing: normal !important;
-    word-spacing: normal !important;
-    line-height: 1.3 !important;
-    text-rendering: geometricPrecision !important;
-    page-break-inside: avoid !important;
-  }
   
-  /* Fix overlapping text */
   .resume-page .flex {
     display: flex !important;
   }
@@ -168,76 +227,11 @@
     justify-content: space-between !important;
   }
   
-  .resume-page .text-sm, 
-  .resume-page .text-xs {
-    letter-spacing: normal !important;
-    word-spacing: normal !important;
-  }
-  
-  /* Fix date alignment */
-  .resume-page .flex.justify-between span {
-    display: inline-block !important;
-    text-align: right !important;
-  }
-  
-  /* Fix flex layout for education and experience items */
-  .resume-page .flex.justify-between {
-    align-items: flex-start !important;
-    flex-wrap: wrap !important;
-  }
-  
-  /* Ensure space between sections */
-  .resume-page .mb-6 {
-    margin-bottom: 1.5rem !important;
-  }
-  
-  /* Ensure space between items */
-  .resume-page .space-y-4 > * + *,
-  .resume-page .space-y-3 > * + * {
-    margin-top: 1rem !important;
-  }
-}
-
-/* Additional print-specific fixes for each template */
-@media print {
-  /* For Modern template */
-  .resume-page [class*="absolute"] {
-    position: absolute !important;
-    overflow: visible !important;
-  }
-  
-  /* For all templates - prevent text overflow */
-  .resume-page .whitespace-pre-line {
-    white-space: pre-line !important;
-    word-wrap: break-word !important;
-  }
-  
-  /* Fix sidebar in Modern template */
-  .resume-page .w-1\/3.absolute {
-    width: 33.333% !important;
-    height: 100% !important;
-    left: 0 !important;
-    top: 0 !important;
-  }
-  
-  /* Fix main content in Modern template */
-  .resume-page .ml-1\/3.w-2\/3.absolute {
-    width: 66.666% !important;
-    left: auto !important;
-    right: 0 !important;
-    top: 0 !important;
-  }
-  
-  /* Professional template header */
-  .resume-page .bg-resume-primary,
-  .resume-page .bg-resume-secondary {
-    print-color-adjust: exact !important;
-    -webkit-print-color-adjust: exact !important;
-  }
-  
-  /* Fix for creative template */
-  .resume-page .grid.grid-cols-12 {
+  .resume-page .grid {
     display: grid !important;
+  }
+  
+  .resume-page .grid-cols-12 {
     grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
   }
   
@@ -248,29 +242,26 @@
   .resume-page .col-span-8 {
     grid-column: span 8 / span 8 !important;
   }
+  
+  /* Modern template print fixes */
+  .resume-page .w-1\/3.absolute {
+    position: absolute !important;
+    width: 33.333% !important;
+    height: 100% !important;
+    left: 0 !important;
+    top: 0 !important;
+  }
+  
+  .resume-page .ml-1\/3.w-2\/3.absolute {
+    position: absolute !important;
+    width: 66.666% !important;
+    left: auto !important;
+    right: 0 !important;
+    top: 0 !important;
+  }
 }
 
-/* Specific class for PDF export */
-.pdf-export {
-  font-family: Arial, Helvetica, sans-serif !important;
-}
-
-.pdf-export * {
-  font-family: Arial, Helvetica, sans-serif !important;
-  overflow: visible !important;
-}
-
-.pdf-export h1, 
-.pdf-export h2, 
-.pdf-export h3 {
-  margin-top: 0.75rem !important;
-  margin-bottom: 0.75rem !important;
-}
-
-.pdf-export p {
-  margin-bottom: 0.25rem !important;
-}
-
+/* Class for when generating PDF */
 .generating-pdf .resume-page {
   transform: none !important;
   box-shadow: none !important;
