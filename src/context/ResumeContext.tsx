@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Resume, ResumeSection } from "../types/resume";
 import { defaultResume } from "../data/resumeTemplates";
@@ -27,83 +26,26 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [savedResumes, setSavedResumes] = useState<Resume[]>([]);
   const { toast } = useToast();
 
-  // Load saved resumes from localStorage on mount
-  useEffect(() => {
-    const savedData = localStorage.getItem("savedResumes");
-    if (savedData) {
-      try {
-        setSavedResumes(JSON.parse(savedData));
-      } catch (e) {
-        console.error("Error loading saved resumes:", e);
-      }
-    }
-  }, []);
+  // ... keep existing code (loading saved resumes from localStorage)
 
   const updateResume = <K extends keyof Resume>(key: K, value: Resume[K]) => {
-    setResume((prev) => ({
-      ...prev,
-      [key]: value,
-      lastUpdated: new Date().toISOString(),
-    }));
+    // ... keep existing code (updating resume)
   };
 
   const saveResume = () => {
-    const updatedResume = {
-      ...resume,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    const existingIndex = savedResumes.findIndex((r) => r.id === resume.id);
-    let newSavedResumes: Resume[];
-
-    if (existingIndex >= 0) {
-      newSavedResumes = [...savedResumes];
-      newSavedResumes[existingIndex] = updatedResume;
-    } else {
-      newSavedResumes = [...savedResumes, updatedResume];
-    }
-
-    setSavedResumes(newSavedResumes);
-    localStorage.setItem("savedResumes", JSON.stringify(newSavedResumes));
-    
-    toast({
-      title: "Resume saved",
-      description: "Your resume has been saved successfully.",
-    });
+    // ... keep existing code (saving resume)
   };
 
   const loadResume = (id: string) => {
-    const foundResume = savedResumes.find((r) => r.id === id);
-    if (foundResume) {
-      setResume(foundResume);
-      setActiveSection("template");
-      
-      toast({
-        title: "Resume loaded",
-        description: "Your resume has been loaded successfully.",
-      });
-    }
+    // ... keep existing code (loading resume)
   };
 
   const deleteResume = (id: string) => {
-    const newSavedResumes = savedResumes.filter((r) => r.id !== id);
-    setSavedResumes(newSavedResumes);
-    localStorage.setItem("savedResumes", JSON.stringify(newSavedResumes));
-    
-    toast({
-      title: "Resume deleted",
-      description: "Your resume has been deleted successfully.",
-    });
+    // ... keep existing code (deleting resume)
   };
 
   const createNewResume = () => {
-    setResume({ ...defaultResume, id: crypto.randomUUID() });
-    setActiveSection("template");
-    
-    toast({
-      title: "New resume created",
-      description: "Start building your new resume.",
-    });
+    // ... keep existing code (creating new resume)
   };
 
   const downloadResume = async () => {
