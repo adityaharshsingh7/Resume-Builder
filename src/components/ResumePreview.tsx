@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useRef } from "react";
 import { useResume } from "@/context/ResumeContext";
 import SimpleTemplate from "./templates/SimpleTemplate";
 import ProfessionalTemplate from "./templates/ProfessionalTemplate";
@@ -8,6 +9,7 @@ import CreativeTemplate from "./templates/CreativeTemplate";
 const ResumePreview: React.FC = () => {
   const { resume } = useResume();
   const { templateId } = resume;
+  const resumeRef = useRef<HTMLDivElement>(null);
 
   const renderTemplate = () => {
     switch (templateId) {
@@ -25,8 +27,14 @@ const ResumePreview: React.FC = () => {
   };
 
   return (
-    <div className="h-full overflow-auto bg-gray-100 p-6 flex justify-center">
-      <div className="transform scale-[0.7] origin-top print:scale-100">
+    <div className="h-full overflow-auto bg-gray-100 p-6 flex justify-center items-start">
+      <div 
+        ref={resumeRef}
+        className="transform scale-[0.7] origin-top print:scale-100 transition-transform duration-200"
+        style={{ 
+          marginBottom: "30px" // Add margin to see the bottom of the resume
+        }}
+      >
         {renderTemplate()}
       </div>
     </div>
