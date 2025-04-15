@@ -26,26 +26,57 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [savedResumes, setSavedResumes] = useState<Resume[]>([]);
   const { toast } = useToast();
 
-  // ... keep existing code (loading saved resumes from localStorage)
+  useEffect(() => {
+    const storedResumes = localStorage.getItem("savedResumes");
+    if (storedResumes) {
+      setSavedResumes(JSON.parse(storedResumes));
+    }
+  }, []);
 
   const updateResume = <K extends keyof Resume>(key: K, value: Resume[K]) => {
-    // ... keep existing code (updating resume)
+    setResume((prev) => ({ ...prev, [key]: value }));
   };
 
   const saveResume = () => {
-    // ... keep existing code (saving resume)
+    const updatedResumes = [...savedResumes, resume];
+    setSavedResumes(updatedResumes);
+    localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+    toast({
+      title: "Success",
+      description: "Your resume has been saved!",
+    });
   };
 
   const loadResume = (id: string) => {
-    // ... keep existing code (loading resume)
+    const resumeToLoad = savedResumes.find((r) => r.id === id);
+    if (resumeToLoad) {
+      setResume(resumeToLoad);
+      toast({
+        title: "Success",
+        description: "Resume loaded successfully!",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Resume not found!",
+        variant: "destructive",
+      });
+    }
   };
 
   const deleteResume = (id: string) => {
-    // ... keep existing code (deleting resume)
+    const updatedResumes = savedResumes.filter((r) => r.id !== id);
+    setSavedResumes(updatedResumes);
+    localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+    toast({
+      title: "Success",
+      description: "Resume deleted successfully!",
+    });
   };
 
   const createNewResume = () => {
-    // ... keep existing code (creating new resume)
+    setResume({ ...defaultResume, id: crypto.randomUUID() });
+    setActiveSection("template");
   };
 
   const downloadResume = async () => {
@@ -65,11 +96,10 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       // Improved canvas rendering options
       const canvas = await html2canvas(resumeElement as HTMLElement, {
-        scale: 2, // Higher scale for better quality
+        scale: 3, // Higher scale for better quality
         useCORS: true,
         logging: false,
         allowTaint: true,
-        letterRendering: true,
         onclone: (clonedDoc) => {
           // Fix the layout in the cloned document
           const clonedResume = clonedDoc.querySelector('.resume-page');
@@ -88,6 +118,14 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 page-break-after: always !important;
               }
               
+              .resume-page.pdf-export * {
+                font-family: Arial, Helvetica, sans-serif !important;
+                letter-spacing: normal !important;
+                word-spacing: normal !important;
+                line-height: 1.3 !important;
+                text-rendering: geometricPrecision !important;
+              }
+              
               .resume-page.pdf-export [class*="absolute"] {
                 position: absolute !important;
               }
@@ -97,9 +135,52 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               }
               
               .resume-page.pdf-export p, 
-              .resume-page.pdf-export div {
+              .resume-page.pdf-export div,
+              .resume-page.pdf-export span,
+              .resume-page.pdf-export h1,
+              .resume-page.pdf-export h2,
+              .resume-page.pdf-export h3 {
                 overflow: visible !important;
                 word-wrap: break-word !important;
+                max-width: 100% !important;
+                white-space: normal !important;
+              }
+              
+              .resume-page.pdf-export .flex {
+                display: flex !important;
+              }
+              
+              .resume-page.pdf-export .justify-between {
+                justify-content: space-between !important;
+              }
+              
+              .resume-page.pdf-export .grid {
+                display: grid !important;
+              }
+              
+              .resume-page.pdf-export .grid-cols-12 {
+                grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+              }
+              
+              .resume-page.pdf-export .col-span-4 {
+                grid-column: span 4 / span 4 !important;
+              }
+              
+              .resume-page.pdf-export .col-span-8 {
+                grid-column: span 8 / span 8 !important;
+              }
+              
+              .resume-page.pdf-export .w-1\\/3 {
+                width: 33.333% !important;
+              }
+              
+              .resume-page.pdf-export .w-2\\/3 {
+                width: 66.666% !important;
+              }
+              
+              .resume-page.pdf-export .space-y-3 > * + *,
+              .resume-page.pdf-export .space-y-4 > * + * {
+                margin-top: 0.75rem !important;
               }
             `;
             clonedDoc.head.appendChild(style);
@@ -110,18 +191,17 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Remove temporary class
       document.body.classList.remove('generating-pdf');
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      
+      // Create PDF with proper dimensions
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
+        unit: 'pt',
+        format: [canvas.width, canvas.height]
       });
       
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Add image at exact size to ensure proper rendering
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height, '', 'FAST');
       pdf.save(`${resume.title || 'resume'}.pdf`);
       
       toast({
