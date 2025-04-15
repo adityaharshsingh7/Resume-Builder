@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { useResume } from "@/context/ResumeContext";
 import SimpleTemplate from "./templates/SimpleTemplate";
