@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useResume } from "@/context/ResumeContext";
 import { FileText, Save, Download, Plus, Loader } from "lucide-react";
+import UserProfile from "./UserProfile";
 
 const Header: React.FC = () => {
   const { saveResume, downloadResume, createNewResume, resume, isLoading } = useResume();
@@ -54,6 +55,7 @@ const Header: React.FC = () => {
               <span>Download PDF</span>
             </Button>
           </div>
+          <UserProfile />
         </div>
       </div>
     </header>
