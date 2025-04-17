@@ -1,11 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Resume, ResumeSection } from "../types/resume";
 import { defaultResume } from "../data/resumeTemplates";
 import { useToast } from "@/components/ui/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { resumeApi } from "@/services/api";
+import { resumeService } from "@/services/supabaseClient";
 
 interface ResumeContextType {
   resume: Resume;
@@ -33,17 +32,16 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { toast } = useToast();
 
   useEffect(() => {
-    // Fetch all saved resumes from the database when the component mounts
     const fetchSavedResumes = async () => {
       setIsLoading(true);
       try {
-        const resumes = await resumeApi.getAll();
+        const resumes = await resumeService.getAll();
         setSavedResumes(resumes);
       } catch (error) {
         console.error("Error fetching resumes:", error);
-        setError("Failed to load saved resumes. Falling back to local storage.");
+        setError("Failed to load saved resumes.");
         
-        // Fallback to localStorage if the API call fails
+        // Fallback to localStorage if Supabase fetch fails
         const storedResumes = localStorage.getItem("savedResumes");
         if (storedResumes) {
           setSavedResumes(JSON.parse(storedResumes));
@@ -65,42 +63,38 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const updatedResume = { ...resume, lastUpdated: new Date().toISOString() };
       
-      // Check if the resume already exists in the database
+      // Check if the resume already exists
       const existingResume = savedResumes.find((r) => r.id === resume.id);
       
+      let savedResume: Resume;
       if (existingResume) {
         // Update existing resume
-        await resumeApi.update(resume.id, updatedResume);
+        savedResume = await resumeService.update(resume.id, updatedResume);
         
         // Update the local state
-        setSavedResumes(savedResumes.map((r) => (r.id === resume.id ? updatedResume : r)));
+        setSavedResumes(savedResumes.map((r) => (r.id === resume.id ? savedResume : r)));
       } else {
         // Create new resume
-        const newResume = await resumeApi.create(updatedResume);
+        savedResume = await resumeService.create(updatedResume);
         
         // Update the local state
-        setSavedResumes([...savedResumes, newResume]);
+        setSavedResumes([...savedResumes, savedResume]);
       }
       
       // Also update localStorage as a backup
-      localStorage.setItem("savedResumes", JSON.stringify([...savedResumes, updatedResume]));
+      localStorage.setItem("savedResumes", JSON.stringify([...savedResumes, savedResume]));
       
       toast({
         title: "Success",
-        description: "Your resume has been saved to the database!",
+        description: "Your resume has been saved to Supabase!",
       });
     } catch (error) {
       console.error("Error saving resume:", error);
-      setError("Failed to save resume to the database. Saved to local storage instead.");
-      
-      // Fallback to localStorage
-      const updatedResumes = [...savedResumes, { ...resume, lastUpdated: new Date().toISOString() }];
-      setSavedResumes(updatedResumes);
-      localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+      setError("Failed to save resume to Supabase.");
       
       toast({
-        title: "Warning",
-        description: "Resume saved to local storage. Database connection failed.",
+        title: "Error",
+        description: "Failed to save resume to Supabase.",
         variant: "destructive",
       });
     } finally {
@@ -111,7 +105,7 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const loadResume = async (id: string) => {
     setIsLoading(true);
     try {
-      const resumeToLoad = await resumeApi.getById(id);
+      const resumeToLoad = await resumeService.getById(id);
       setResume(resumeToLoad);
       toast({
         title: "Success",
@@ -120,22 +114,11 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       console.error("Error loading resume:", error);
       
-      // Try to find the resume in the local state
-      const localResume = savedResumes.find((r) => r.id === id);
-      
-      if (localResume) {
-        setResume(localResume);
-        toast({
-          title: "Info",
-          description: "Resume loaded from local cache.",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Resume not found!",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Resume not found!",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -144,8 +127,8 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const deleteResume = async (id: string) => {
     setIsLoading(true);
     try {
-      // Delete from database
-      await resumeApi.delete(id);
+      // Delete from Supabase
+      await resumeService.delete(id);
       
       // Update local state
       const updatedResumes = savedResumes.filter((r) => r.id !== id);
@@ -161,14 +144,9 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       console.error("Error deleting resume:", error);
       
-      // Fallback to only updating local state
-      const updatedResumes = savedResumes.filter((r) => r.id !== id);
-      setSavedResumes(updatedResumes);
-      localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
-      
       toast({
-        title: "Warning",
-        description: "Resume removed from local storage. Database connection failed.",
+        title: "Error",
+        description: "Failed to delete resume.",
         variant: "destructive",
       });
     } finally {
