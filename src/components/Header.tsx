@@ -1,10 +1,11 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useResume } from "@/context/ResumeContext";
-import { FileText, Save, Download, Plus } from "lucide-react";
+import { FileText, Save, Download, Plus, Loader } from "lucide-react";
 
 const Header: React.FC = () => {
-  const { saveResume, downloadResume, createNewResume, resume } = useResume();
+  const { saveResume, downloadResume, createNewResume, resume, isLoading } = useResume();
 
   return (
     <header className="bg-resume-primary text-white shadow-md">
@@ -21,6 +22,7 @@ const Header: React.FC = () => {
               size="sm" 
               className="bg-white text-resume-primary font-medium flex items-center gap-2"
               onClick={createNewResume}
+              disabled={isLoading}
             >
               <Plus className="h-4 w-4" />
               <span>New</span>
@@ -31,8 +33,13 @@ const Header: React.FC = () => {
               size="sm" 
               className="bg-white text-resume-primary font-medium flex items-center gap-2"
               onClick={saveResume}
+              disabled={isLoading}
             >
-              <Save className="h-4 w-4" />
+              {isLoading ? (
+                <Loader className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               <span>Save</span>
             </Button>
             
@@ -41,6 +48,7 @@ const Header: React.FC = () => {
               size="sm" 
               className="bg-white text-resume-primary font-medium flex items-center gap-2"
               onClick={downloadResume}
+              disabled={isLoading}
             >
               <Download className="h-4 w-4" />
               <span>Download PDF</span>

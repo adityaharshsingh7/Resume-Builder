@@ -4,10 +4,19 @@ import { useResume } from "@/context/ResumeContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { FileText, Trash } from "lucide-react";
+import { FileText, Trash, Loader } from "lucide-react";
 
 const SavedResumes: React.FC = () => {
-  const { savedResumes, loadResume, deleteResume } = useResume();
+  const { savedResumes, loadResume, deleteResume, isLoading } = useResume();
+
+  if (isLoading) {
+    return (
+      <div className="p-4 flex justify-center items-center">
+        <Loader className="h-5 w-5 animate-spin text-resume-primary" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading resumes...</span>
+      </div>
+    );
+  }
 
   if (savedResumes.length === 0) {
     return (
@@ -40,6 +49,7 @@ const SavedResumes: React.FC = () => {
                     size="sm" 
                     className="h-7 px-2 text-xs"
                     onClick={() => loadResume(savedResume.id)}
+                    disabled={isLoading}
                   >
                     Open
                   </Button>
@@ -48,6 +58,7 @@ const SavedResumes: React.FC = () => {
                     size="sm" 
                     className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => deleteResume(savedResume.id)}
+                    disabled={isLoading}
                   >
                     <Trash className="h-3 w-3" />
                   </Button>

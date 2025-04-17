@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Resume, ResumeSection } from "../types/resume";
 import { defaultResume } from "../data/resumeTemplates";
 import { useToast } from "@/components/ui/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { resumeApi } from "@/services/api";
 
 interface ResumeContextType {
   resume: Resume;
@@ -11,11 +13,13 @@ interface ResumeContextType {
   setActiveSection: (section: ResumeSection) => void;
   updateResume: <K extends keyof Resume>(key: K, value: Resume[K]) => void;
   savedResumes: Resume[];
-  saveResume: () => void;
-  loadResume: (id: string) => void;
-  deleteResume: (id: string) => void;
+  saveResume: () => Promise<void>;
+  loadResume: (id: string) => Promise<void>;
+  deleteResume: (id: string) => Promise<void>;
   createNewResume: () => void;
   downloadResume: () => void;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -24,54 +28,152 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [resume, setResume] = useState<Resume>({ ...defaultResume, id: crypto.randomUUID() });
   const [activeSection, setActiveSection] = useState<ResumeSection>("template");
   const [savedResumes, setSavedResumes] = useState<Resume[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedResumes = localStorage.getItem("savedResumes");
-    if (storedResumes) {
-      setSavedResumes(JSON.parse(storedResumes));
-    }
+    // Fetch all saved resumes from the database when the component mounts
+    const fetchSavedResumes = async () => {
+      setIsLoading(true);
+      try {
+        const resumes = await resumeApi.getAll();
+        setSavedResumes(resumes);
+      } catch (error) {
+        console.error("Error fetching resumes:", error);
+        setError("Failed to load saved resumes. Falling back to local storage.");
+        
+        // Fallback to localStorage if the API call fails
+        const storedResumes = localStorage.getItem("savedResumes");
+        if (storedResumes) {
+          setSavedResumes(JSON.parse(storedResumes));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSavedResumes();
   }, []);
 
   const updateResume = <K extends keyof Resume>(key: K, value: Resume[K]) => {
-    setResume((prev) => ({ ...prev, [key]: value }));
+    setResume((prev) => ({ ...prev, [key]: value, lastUpdated: new Date().toISOString() }));
   };
 
-  const saveResume = () => {
-    const updatedResumes = [...savedResumes, resume];
-    setSavedResumes(updatedResumes);
-    localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
-    toast({
-      title: "Success",
-      description: "Your resume has been saved!",
-    });
+  const saveResume = async () => {
+    setIsLoading(true);
+    try {
+      const updatedResume = { ...resume, lastUpdated: new Date().toISOString() };
+      
+      // Check if the resume already exists in the database
+      const existingResume = savedResumes.find((r) => r.id === resume.id);
+      
+      if (existingResume) {
+        // Update existing resume
+        await resumeApi.update(resume.id, updatedResume);
+        
+        // Update the local state
+        setSavedResumes(savedResumes.map((r) => (r.id === resume.id ? updatedResume : r)));
+      } else {
+        // Create new resume
+        const newResume = await resumeApi.create(updatedResume);
+        
+        // Update the local state
+        setSavedResumes([...savedResumes, newResume]);
+      }
+      
+      // Also update localStorage as a backup
+      localStorage.setItem("savedResumes", JSON.stringify([...savedResumes, updatedResume]));
+      
+      toast({
+        title: "Success",
+        description: "Your resume has been saved to the database!",
+      });
+    } catch (error) {
+      console.error("Error saving resume:", error);
+      setError("Failed to save resume to the database. Saved to local storage instead.");
+      
+      // Fallback to localStorage
+      const updatedResumes = [...savedResumes, { ...resume, lastUpdated: new Date().toISOString() }];
+      setSavedResumes(updatedResumes);
+      localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+      
+      toast({
+        title: "Warning",
+        description: "Resume saved to local storage. Database connection failed.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const loadResume = (id: string) => {
-    const resumeToLoad = savedResumes.find((r) => r.id === id);
-    if (resumeToLoad) {
+  const loadResume = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const resumeToLoad = await resumeApi.getById(id);
       setResume(resumeToLoad);
       toast({
         title: "Success",
         description: "Resume loaded successfully!",
       });
-    } else {
-      toast({
-        title: "Error",
-        description: "Resume not found!",
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error("Error loading resume:", error);
+      
+      // Try to find the resume in the local state
+      const localResume = savedResumes.find((r) => r.id === id);
+      
+      if (localResume) {
+        setResume(localResume);
+        toast({
+          title: "Info",
+          description: "Resume loaded from local cache.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Resume not found!",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const deleteResume = (id: string) => {
-    const updatedResumes = savedResumes.filter((r) => r.id !== id);
-    setSavedResumes(updatedResumes);
-    localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
-    toast({
-      title: "Success",
-      description: "Resume deleted successfully!",
-    });
+  const deleteResume = async (id: string) => {
+    setIsLoading(true);
+    try {
+      // Delete from database
+      await resumeApi.delete(id);
+      
+      // Update local state
+      const updatedResumes = savedResumes.filter((r) => r.id !== id);
+      setSavedResumes(updatedResumes);
+      
+      // Also update localStorage
+      localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+      
+      toast({
+        title: "Success",
+        description: "Resume deleted successfully!",
+      });
+    } catch (error) {
+      console.error("Error deleting resume:", error);
+      
+      // Fallback to only updating local state
+      const updatedResumes = savedResumes.filter((r) => r.id !== id);
+      setSavedResumes(updatedResumes);
+      localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+      
+      toast({
+        title: "Warning",
+        description: "Resume removed from local storage. Database connection failed.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const createNewResume = () => {
@@ -198,6 +300,8 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     deleteResume,
     createNewResume,
     downloadResume,
+    isLoading,
+    error,
   };
 
   return <ResumeContext.Provider value={value}>{children}</ResumeContext.Provider>;
@@ -210,5 +314,3 @@ export const useResume = (): ResumeContextType => {
   }
   return context;
 };
-
-    
