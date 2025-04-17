@@ -5,7 +5,8 @@ import { defaultResume } from "../data/resumeTemplates";
 import { useToast } from "@/components/ui/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { resumeService } from "@/services/supabaseClient";
+import { resumeService } from "@/services/resumeService";
+import { useAuth } from "@/context/AuthContext";
 
 interface ResumeContextType {
   resume: Resume;
@@ -31,48 +32,52 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchSavedResumes = async () => {
+      if (!isAuthenticated || !user) return;
+      
       setIsLoading(true);
       setError(null);
       try {
         const resumes = await resumeService.getAll();
         if (resumes && resumes.length > 0) {
           setSavedResumes(resumes);
-        } else {
-          // Fallback to localStorage if Supabase returns empty
-          const storedResumes = localStorage.getItem("savedResumes");
-          if (storedResumes) {
-            setSavedResumes(JSON.parse(storedResumes));
-          }
         }
       } catch (error) {
         console.error("Error fetching resumes:", error);
         setError("Failed to load saved resumes. Please check your connection.");
-        
-        // Fallback to localStorage if Supabase fetch fails
-        const storedResumes = localStorage.getItem("savedResumes");
-        if (storedResumes) {
-          setSavedResumes(JSON.parse(storedResumes));
-        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSavedResumes();
-  }, []);
+  }, [isAuthenticated, user]);
 
   const updateResume = <K extends keyof Resume>(key: K, value: Resume[K]) => {
     setResume((prev) => ({ ...prev, [key]: value, lastUpdated: new Date().toISOString() }));
   };
 
   const saveResume = async () => {
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save resumes.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     try {
-      const updatedResume = { ...resume, lastUpdated: new Date().toISOString() };
+      const updatedResume = {
+        ...resume,
+        lastUpdated: new Date().toISOString(),
+        user_id: user.id
+      };
       
       // Check if the resume already exists
       const existingResume = savedResumes.find((r) => r.id === resume.id);
@@ -94,9 +99,6 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         setSavedResumes(updatedResumes);
         
-        // Also update localStorage as a backup
-        localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
-        
         toast({
           title: "Success",
           description: "Your resume has been saved successfully!",
@@ -108,39 +110,26 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error("Error saving resume:", error);
       setError("Failed to save resume. Please try again later.");
       
-      // Fallback to localStorage only
-      try {
-        const updatedResumes = [...savedResumes];
-        const existingIndex = updatedResumes.findIndex(r => r.id === resume.id);
-        
-        if (existingIndex >= 0) {
-          updatedResumes[existingIndex] = resume;
-        } else {
-          updatedResumes.push(resume);
-        }
-        
-        localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
-        setSavedResumes(updatedResumes);
-        
-        toast({
-          title: "Warning",
-          description: "Resume was saved locally only. Connection to Supabase failed.",
-          variant: "destructive",
-        });
-      } catch (localError) {
-        console.error("Local storage fallback failed:", localError);
-        toast({
-          title: "Error",
-          description: "Failed to save resume anywhere. Please check your connection.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to save resume. Please check your connection.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const loadResume = async (id: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to load resumes.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     try {
@@ -152,17 +141,7 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           description: "Resume loaded successfully!",
         });
       } else {
-        // Try to find in local state if not found in Supabase
-        const localResume = savedResumes.find(r => r.id === id);
-        if (localResume) {
-          setResume(localResume);
-          toast({
-            title: "Success",
-            description: "Resume loaded from local storage.",
-          });
-        } else {
-          throw new Error("Resume not found in Supabase or local storage.");
-        }
+        throw new Error("Resume not found.");
       }
     } catch (error) {
       console.error("Error loading resume:", error);
@@ -179,10 +158,18 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const deleteResume = async (id: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete resumes.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     try {
-      // Delete from Supabase
       const success = await resumeService.delete(id);
       
       if (success) {
@@ -190,40 +177,22 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const updatedResumes = savedResumes.filter((r) => r.id !== id);
         setSavedResumes(updatedResumes);
         
-        // Also update localStorage
-        localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
-        
         toast({
           title: "Success",
           description: "Resume deleted successfully!",
         });
       } else {
-        throw new Error("Failed to delete resume from Supabase.");
+        throw new Error("Failed to delete resume.");
       }
     } catch (error) {
       console.error("Error deleting resume:", error);
+      setError("Failed to delete resume. Please try again later.");
       
-      // Try to delete just from local state even if Supabase fails
-      try {
-        const updatedResumes = savedResumes.filter((r) => r.id !== id);
-        setSavedResumes(updatedResumes);
-        localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
-        
-        toast({
-          title: "Warning",
-          description: "Resume was deleted locally, but Supabase delete failed.",
-          variant: "destructive",
-        });
-      } catch (localError) {
-        console.error("Local deletion failed:", localError);
-        setError("Failed to delete resume anywhere. Please try again later.");
-        
-        toast({
-          title: "Error",
-          description: "Failed to delete resume. Please check your connection.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to delete resume. Please check your connection.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

@@ -1,40 +1,31 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { useAuth } from '@/context/AuthContext';
-import { Loader } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-const signUpSchema = z.object({
+const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  confirmPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  confirmPassword: z.string().min(6, { message: 'Please confirm your password' }),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
 });
 
-type SignUpFormValues = z.infer<typeof signUpSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
-const SignUpForm: React.FC<{ onSuccess?: () => void; onSignInClick: () => void }> = ({ 
-  onSuccess,
-  onSignInClick
-}) => {
-  const { signUp, isLoading } = useAuth();
-  
-  const form = useForm<SignUpFormValues>({
-    resolver: zodResolver(signUpSchema),
+const SignUpForm: React.FC<{ onSignInClick: () => void }> = ({ onSignInClick }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -42,22 +33,40 @@ const SignUpForm: React.FC<{ onSuccess?: () => void; onSignInClick: () => void }
     },
   });
 
-  const onSubmit = async (values: SignUpFormValues) => {
-    const success = await signUp(values.email, values.password);
-    if (success && onSuccess) {
-      onSuccess();
+  const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Account created! Please check your email to confirm your registration.',
+      });
+      
+      // Switch to sign in view
+      onSignInClick();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to sign up. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 w-full max-w-md mx-auto">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">Create Account</h1>
-        <p className="text-sm text-muted-foreground">
-          Sign up to start creating professional resumes
-        </p>
-      </div>
-
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Create Account</h2>
+      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -67,18 +76,13 @@ const SignUpForm: React.FC<{ onSuccess?: () => void; onSignInClick: () => void }
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="you@example.com" 
-                    type="email" 
-                    {...field} 
-                    disabled={isLoading}
-                  />
+                  <Input placeholder="email@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           <FormField
             control={form.control}
             name="password"
@@ -86,18 +90,13 @@ const SignUpForm: React.FC<{ onSuccess?: () => void; onSignInClick: () => void }
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="••••••••" 
-                    type="password" 
-                    {...field} 
-                    disabled={isLoading}
-                  />
+                  <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           <FormField
             control={form.control}
             name="confirmPassword"
@@ -105,44 +104,23 @@ const SignUpForm: React.FC<{ onSuccess?: () => void; onSignInClick: () => void }
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="••••••••" 
-                    type="password" 
-                    {...field} 
-                    disabled={isLoading}
-                  />
+                  <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                Creating account...
-              </>
-            ) : (
-              'Sign Up'
-            )}
+          
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Creating Account...' : 'Sign Up'}
           </Button>
         </form>
       </Form>
-
-      <div className="text-center">
+      
+      <div className="mt-6 text-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Button 
-            variant="link" 
-            className="p-0" 
-            onClick={onSignInClick}
-            disabled={isLoading}
-          >
+          <Button variant="link" className="p-0" onClick={onSignInClick}>
             Sign In
           </Button>
         </p>
