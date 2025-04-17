@@ -56,6 +56,7 @@ export interface Resume {
   education: ResumeEducation[];
   experience: ResumeExperience[];
   skills: ResumeSkill[];
+  user_id?: string; // Added user_id property which is needed for Supabase
 }
 
 export type ResumeSection = 'personalInfo' | 'education' | 'experience' | 'skills' | 'template';
